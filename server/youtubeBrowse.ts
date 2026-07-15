@@ -29,7 +29,7 @@ function extractLockupVideos(obj: unknown): YouTubeVideo[] {
       const contentImage = lockup.contentImage as Record<string, unknown> | undefined;
       const thumbModel = contentImage?.thumbnailViewModel as Record<string, unknown> | undefined;
       const image = thumbModel?.image as { sources?: Array<{ url: string }> } | undefined;
-      const thumbUrl = image?.sources?.at(-1)?.url;
+      const thumbUrl = image?.sources?.[image.sources.length - 1]?.url;
 
       videos.push({
         id: lockup.contentId,
