@@ -1,0 +1,169 @@
+:root {
+  --bg: #0a0812;
+  --bg-elevated: #14101f;
+  --bg-card: #1c1528;
+  --border: rgba(255, 255, 255, 0.18);
+  --border-bold: 3px solid #0a0812;
+  --text: #fffef5;
+  --muted: #c9b8e0;
+
+  --pink: #ff2d95;
+  --pink-soft: rgba(255, 45, 149, 0.22);
+  --pink-glow: rgba(255, 45, 149, 0.55);
+  --purple: #bf40ff;
+  --purple-soft: rgba(191, 64, 255, 0.22);
+  --cyan: #00f5ff;
+  --cyan-soft: rgba(0, 245, 255, 0.18);
+  --yellow: #ffe600;
+  --yellow-soft: rgba(255, 230, 0, 0.2);
+  --lime: #b4ff39;
+  --lime-soft: rgba(180, 255, 57, 0.18);
+
+  --accent: var(--pink);
+  --accent-soft: var(--pink-soft);
+
+  --font-display: 'Bebas Neue', 'M PLUS 1', sans-serif;
+  --font-body: 'M PLUS 1', system-ui, sans-serif;
+  --font-doodle: 'Permanent Marker', cursive;
+
+  --radius: 4px;
+  --radius-sticker: 2px;
+  --shadow: 6px 6px 0 #0a0812;
+  --shadow-neon: 0 0 20px var(--pink-glow), 0 0 40px rgba(191, 64, 255, 0.25);
+
+  font-family: var(--font-body);
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(circle at 12% 18%, var(--pink-soft) 0%, transparent 28%),
+    radial-gradient(circle at 88% 8%, var(--cyan-soft) 0%, transparent 24%),
+    radial-gradient(circle at 72% 82%, var(--purple-soft) 0%, transparent 30%),
+    radial-gradient(circle at 8% 78%, var(--yellow-soft) 0%, transparent 22%),
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 18px,
+      rgba(255, 255, 255, 0.018) 18px,
+      rgba(255, 255, 255, 0.018) 20px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 39px,
+      rgba(255, 45, 149, 0.04) 39px,
+      rgba(255, 45, 149, 0.04) 40px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 39px,
+      rgba(0, 245, 255, 0.03) 39px,
+      rgba(0, 245, 255, 0.03) 40px
+    );
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cpath fill='%23ff2d95' fill-opacity='0.12' d='M40 4l4 12h12l-10 8 4 12-10-8-10 8 4-12-10-8h12z'/%3E%3C/svg%3E");
+  z-index: 0;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
+button,
+a {
+  font: inherit;
+}
+
+code {
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 0.9em;
+  background: var(--yellow-soft);
+  color: var(--yellow);
+  padding: 0.1em 0.35em;
+  border-radius: 2px;
+  border: 1px solid rgba(255, 230, 0, 0.35);
+}
+
+::selection {
+  background: var(--accent);
+  color: #0a0812;
+}
+
+/* Justin — punk neon (default) */
+.theme-justin {
+  --accent: var(--pink);
+  --accent-soft: var(--pink-soft);
+  --shadow-neon: 0 0 20px var(--pink-glow), 0 0 40px rgba(191, 64, 255, 0.25);
+}
+
+/* Ariana — cloud glam lavender */
+.theme-ariana {
+  --pink: #e8a4ff;
+  --pink-soft: rgba(232, 164, 255, 0.24);
+  --pink-glow: rgba(232, 164, 255, 0.55);
+  --purple: #c9a0ff;
+  --purple-soft: rgba(201, 160, 255, 0.24);
+  --cyan: #b8e8ff;
+  --cyan-soft: rgba(184, 232, 255, 0.22);
+  --yellow: #ffd6f3;
+  --yellow-soft: rgba(255, 214, 243, 0.22);
+  --lime: #d4c4ff;
+  --lime-soft: rgba(212, 196, 255, 0.2);
+  --accent: var(--pink);
+  --accent-soft: var(--pink-soft);
+  --shadow-neon: 0 0 22px var(--pink-glow), 0 0 44px rgba(184, 232, 255, 0.28);
+}
+
+.theme-ariana .hero {
+  background:
+    linear-gradient(135deg, #1a1028 0%, #2a1848 45%, #1a1435 100%),
+    repeating-linear-gradient(
+      -12deg,
+      transparent,
+      transparent 8px,
+      rgba(232, 164, 255, 0.07) 8px,
+      rgba(232, 164, 255, 0.07) 10px
+    );
+}
+
+.theme-ariana .title-main {
+  background: linear-gradient(180deg, #fff 20%, var(--pink) 55%, var(--cyan) 100%);
+}
+
+.theme-ariana .sticker--pink {
+  background: var(--pink);
+}
+
+.theme-ariana .sticker--cyan {
+  background: var(--cyan);
+}
+
+.theme-ariana .sticker--yellow {
+  background: var(--yellow);
+}
+
