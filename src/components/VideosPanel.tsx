@@ -1,13 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { fetchYouTubeFeeds, fetchYouTubeVideos } from '../api';
-import type { ArtistId, YouTubeFeed, YouTubeFeedId, YouTubeVideo } from '../types';
-
-const SOURCE_LABELS = {
-  api: 'YouTube Data API',
-  rss: 'YouTube RSS feed',
-  browse: 'YouTube channel catalog',
-} as const;
+import { useLanguage } from '../LanguageProvider';
+import type { ArtistId, CustomArtistProfile, YouTubeFeed, YouTubeFeedId, YouTubeVideo } from '../types';
 
 const SEARCH_DEBOUNCE_MS = 350;
 const MAX_SEARCH_EXTRA_PAGES = 12;
@@ -28,11 +23,14 @@ function dedupeVideos(videos: YouTubeVideo[]): YouTubeVideo[] {
 
 interface VideosPanelProps {
   artist: ArtistId;
+  profile?: CustomArtistProfile;
 }
 
-export function VideosPanel({ artist }: VideosPanelProps) {
+export function VideosPanel({ artist, profile }: VideosPanelProps) {
+  const { locale, tr } = useLanguage();
   const [feeds, setFeeds] = useState<YouTubeFeed[]>([]);
   const [activeFeed, setActiveFeed] = useState<YouTubeFeedId>('vevo');
+  const [feedsReady, setFeedsReady] = useState(false);
   const [videos, setVideos] = useState<YouTubeVideo[]>([]);
   const [selected, setSelected] = useState<YouTubeVideo | null>(null);
   const [nextPageToken, setNextPageToken] = useState<string | undefined>();
@@ -45,14 +43,38 @@ export function VideosPanel({ artist }: VideosPanelProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const searchPagesLoaded = useRef(0);
 
+  const sourceLabels = useMemo(
+    () => ({
+      api: tr('videos.source.api'),
+      rss: tr('videos.source.rss'),
+      browse: tr('videos.source.browse'),
+    }),
+    [tr],
+  );
+
   useEffect(() => {
-    setActiveFeed('vevo');
     setSearchQuery('');
+    setFeedsReady(false);
+    setFeeds([]);
+    setVideos([]);
+    setSelected(null);
+    setError('');
     searchPagesLoaded.current = 0;
-    void fetchYouTubeFeeds(artist)
-      .then((data) => setFeeds(data.feeds))
-      .catch(() => setFeeds([]));
-  }, [artist]);
+
+    void fetchYouTubeFeeds(artist, profile)
+      .then((data) => {
+        setFeeds(data.feeds);
+        const defaultFeed = data.feeds.find((f) => f.id === 'vevo') ?? data.feeds[0];
+        if (defaultFeed) setActiveFeed(defaultFeed.id);
+        setFeedsReady(true);
+      })
+      .catch(() => {
+        setFeeds([]);
+        setFeedsReady(true);
+      });
+  }, [artist, profile]);
+
+  const feedIsValid = feeds.some((f) => f.id === activeFeed);
 
   const load = useCallback(
     async (pageToken?: string, append = false) => {
@@ -60,7 +82,7 @@ export function VideosPanel({ artist }: VideosPanelProps) {
       else setLoading(true);
 
       try {
-        const data = await fetchYouTubeVideos({ artist, feed: activeFeed, pageToken });
+        const data = await fetchYouTubeVideos({ artist, profile, feed: activeFeed, pageToken });
         setVideos((prev) =>
           dedupeVideos(append ? [...prev, ...data.videos] : data.videos),
         );
@@ -76,13 +98,23 @@ export function VideosPanel({ artist }: VideosPanelProps) {
         setLoadingMore(false);
       }
     },
-    [activeFeed, artist],
+    [activeFeed, artist, profile],
   );
 
   useEffect(() => {
+    if (!feedsReady) return;
+    if (feeds.length === 0) {
+      setLoading(false);
+      setError('No YouTube channels configured for this artist.');
+      return;
+    }
+    if (!feedIsValid) {
+      setActiveFeed(feeds[0].id);
+      return;
+    }
     searchPagesLoaded.current = 0;
     void load();
-  }, [load]);
+  }, [load, feedsReady, feeds, feedIsValid, activeFeed]);
 
   useEffect(() => {
     setSearchQuery('');
@@ -128,14 +160,15 @@ export function VideosPanel({ artist }: VideosPanelProps) {
   }, [normalizedQuery, videos, nextPageToken, loading, loadingMore, load]);
 
   const currentFeed = feeds.find((f) => f.id === activeFeed);
+  const dateLocale = locale === 'ja' ? 'ja-JP' : undefined;
 
-  if (loading) return <div className="panel-loading">Loading YouTube catalog…</div>;
+  if (loading) return <div className="panel-loading">{tr('videos.loading')}</div>;
   if (error) {
     return (
       <div className="panel-error">
         <p>{error}</p>
         <button type="button" className="load-more" onClick={() => void load()}>
-          Retry connection
+          {tr('videos.retry')}
         </button>
       </div>
     );
@@ -144,27 +177,29 @@ export function VideosPanel({ artist }: VideosPanelProps) {
   return (
     <div className="videos-layout">
       <div className="player-column">
-        <div className="feed-switcher" role="tablist" aria-label="YouTube channel">
-          {feeds.map((feed) => (
-            <button
-              key={feed.id}
-              type="button"
-              role="tab"
-              aria-selected={activeFeed === feed.id}
-              className={`feed-btn ${activeFeed === feed.id ? 'active' : ''}`}
-              onClick={() => setActiveFeed(feed.id)}
-            >
-              {feed.label}
-            </button>
-          ))}
-        </div>
+        {feeds.length > 1 && (
+          <div className="feed-switcher" role="tablist" aria-label={tr('videos.feedAria')}>
+            {feeds.map((feed) => (
+              <button
+                key={feed.id}
+                type="button"
+                role="tab"
+                aria-selected={activeFeed === feed.id}
+                className={`feed-btn ${activeFeed === feed.id ? 'active' : ''}`}
+                onClick={() => setActiveFeed(feed.id)}
+              >
+                {feed.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         {currentFeed && (
           <p className="feed-description">
             {currentFeed.description}
             {' · '}
             <a href={currentFeed.url} target="_blank" rel="noopener noreferrer">
-              Open on YouTube ↗
+              {tr('videos.openYoutube')}
             </a>
           </p>
         )}
@@ -183,42 +218,44 @@ export function VideosPanel({ artist }: VideosPanelProps) {
               <h2>{selected.title}</h2>
               {selected.publishedAt ? (
                 <p className="meta">
-                  Published {new Date(selected.publishedAt).toLocaleDateString()}
+                  {tr('videos.published', {
+                    date: new Date(selected.publishedAt).toLocaleDateString(dateLocale),
+                  })}
                 </p>
               ) : null}
             </div>
           </>
         ) : (
-          <p className="muted">Select a video to watch</p>
+          <p className="muted">{tr('videos.selectVideo')}</p>
         )}
         <p className="source-badge">
-          Source: {SOURCE_LABELS[source]}
+          {tr('videos.source')} {sourceLabels[source]}
           {hint ? ` · ${hint}` : ''}
         </p>
       </div>
 
       <aside className="video-list">
         <header className="list-header">
-          <h3>{activeFeed === 'vevo' ? 'VEVO Catalog' : 'All Videos'}</h3>
+          <h3>{activeFeed === 'vevo' ? tr('videos.catalogVevo') : tr('videos.catalogAll')}</h3>
           <span>
             {searchingCatalog
-              ? `Searching… ${videos.length} loaded`
+              ? tr('videos.searching', { count: videos.length })
               : normalizedQuery
-                ? `${filteredVideos.length} of ${videos.length}`
-                : `${videos.length} loaded`}
+                ? tr('videos.filtered', { filtered: filteredVideos.length, total: videos.length })
+                : tr('videos.loaded', { count: videos.length })}
           </span>
         </header>
 
         <div className="video-search">
           <label className="video-search-label" htmlFor="video-catalog-search">
-            Search catalog
+            {tr('videos.searchLabel')}
           </label>
           <div className="video-search-row">
             <input
               id="video-catalog-search"
               type="search"
               className="video-search-input"
-              placeholder="Find a video… e.g. Break Free"
+              placeholder={tr('videos.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => {
                 searchPagesLoaded.current = 0;
@@ -231,7 +268,7 @@ export function VideosPanel({ artist }: VideosPanelProps) {
               <button
                 type="button"
                 className="video-search-clear"
-                aria-label="Clear search"
+                aria-label={tr('videos.clearSearch')}
                 onClick={() => {
                   searchPagesLoaded.current = 0;
                   setSearchQuery('');
@@ -247,11 +284,14 @@ export function VideosPanel({ artist }: VideosPanelProps) {
           {filteredVideos.length === 0 ? (
             <li className="video-search-empty">
               {searchingCatalog ? (
-                <>Searching deeper in catalog… <strong>{videos.length}</strong> videos checked</>
+                <>{tr('videos.searchingDeeper', { count: videos.length })}</>
               ) : (
                 <>
-                  No videos match <strong>{searchQuery}</strong>
-                  {videos.length > 0 ? ` in ${videos.length} loaded` : ''}
+                  {tr('videos.noMatch', {
+                    query: searchQuery,
+                    loaded:
+                      videos.length > 0 ? tr('videos.inLoaded', { count: videos.length }) : '',
+                  })}
                 </>
               )}
             </li>
@@ -267,7 +307,7 @@ export function VideosPanel({ artist }: VideosPanelProps) {
                   <div>
                     <strong>{video.title}</strong>
                     {video.publishedAt ? (
-                      <span>{new Date(video.publishedAt).toLocaleDateString()}</span>
+                      <span>{new Date(video.publishedAt).toLocaleDateString(dateLocale)}</span>
                     ) : null}
                   </div>
                 </button>
@@ -282,7 +322,7 @@ export function VideosPanel({ artist }: VideosPanelProps) {
             disabled={loadingMore}
             onClick={() => void load(nextPageToken, true)}
           >
-            {loadingMore ? 'Loading…' : 'Load more videos'}
+            {loadingMore ? tr('videos.loadingMore') : tr('videos.loadMore')}
           </button>
         )}
       </aside>

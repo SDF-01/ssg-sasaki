@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { fetchAlbumTracks, fetchSpotifyCatalog } from '../api';
-import type { ArtistId, SpotifyAlbum, SpotifyTrack } from '../types';
+import { useLanguage } from '../LanguageProvider';
+import type { ArtistId, CustomArtistProfile, SpotifyAlbum, SpotifyTrack } from '../types';
 
 function formatDuration(ms: number): string {
   const total = Math.floor(ms / 1000);
@@ -14,9 +15,11 @@ interface MusicPanelProps {
   artist: ArtistId;
   artistName: string;
   spotifyArtistId: string;
+  profile?: CustomArtistProfile;
 }
 
-export function MusicPanel({ artist, artistName, spotifyArtistId }: MusicPanelProps) {
+export function MusicPanel({ artist, artistName, spotifyArtistId, profile }: MusicPanelProps) {
+  const { tr } = useLanguage();
   const [albums, setAlbums] = useState<SpotifyAlbum[]>([]);
   const [topTracks, setTopTracks] = useState<SpotifyTrack[]>([]);
   const [albumTracks, setAlbumTracks] = useState<SpotifyTrack[]>([]);
@@ -33,7 +36,7 @@ export function MusicPanel({ artist, artistName, spotifyArtistId }: MusicPanelPr
     setAlbumTracks([]);
     void (async () => {
       try {
-        const data = await fetchSpotifyCatalog(artist);
+        const data = await fetchSpotifyCatalog(artist, profile);
         setAlbums(data.albums);
         setTopTracks(data.topTracks);
         setSource(data.source);
@@ -45,7 +48,7 @@ export function MusicPanel({ artist, artistName, spotifyArtistId }: MusicPanelPr
         setLoading(false);
       }
     })();
-  }, [artist]);
+  }, [artist, profile]);
 
   useEffect(() => {
     if (!selectedAlbum || source !== 'api') return;
@@ -65,20 +68,24 @@ export function MusicPanel({ artist, artistName, spotifyArtistId }: MusicPanelPr
     void audioRef.current.play().catch(() => undefined);
   }, [activeTrack]);
 
-  if (loading) return <div className="panel-loading">Loading discography…</div>;
+  if (loading) return <div className="panel-loading">{tr('music.loading')}</div>;
 
   return (
     <div className="music-layout">
       <audio ref={audioRef} />
 
       <section className="spotify-embed-section">
-        <h3>Stream {artistName} on Spotify</h3>
-        <iframe
-          title={`${artistName} on Spotify`}
-          src={`https://open.spotify.com/embed/artist/${spotifyArtistId}?utm_source=generator&theme=0`}
-          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-          loading="lazy"
-        />
+        <h3>{tr('music.streamOn', { name: artistName })}</h3>
+        {spotifyArtistId ? (
+          <iframe
+            title={`${artistName} on Spotify`}
+            src={`https://open.spotify.com/embed/artist/${spotifyArtistId}?utm_source=generator&theme=0`}
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"
+          />
+        ) : (
+          <p className="muted">{tr('music.noSpotify')}</p>
+        )}
       </section>
 
       {error && <div className="panel-error">{error}</div>}
@@ -87,7 +94,7 @@ export function MusicPanel({ artist, artistName, spotifyArtistId }: MusicPanelPr
         <>
           <section className="track-section">
             <header className="list-header">
-              <h3>Top Tracks</h3>
+              <h3>{tr('music.topTracks')}</h3>
             </header>
             <ul className="track-list">
               {topTracks.map((track, i) => (
@@ -110,18 +117,16 @@ export function MusicPanel({ artist, artistName, spotifyArtistId }: MusicPanelPr
             </ul>
             {activeTrack && (
               <p className="now-playing-track">
-                Now playing preview: <strong>{activeTrack.name}</strong>
-                {!activeTrack.previewUrl && (
-                  <span className="muted"> — no 30s preview; open in Spotify</span>
-                )}
+                {tr('music.nowPlaying')} <strong>{activeTrack.name}</strong>
+                {!activeTrack.previewUrl && <span className="muted">{tr('music.noPreview')}</span>}
               </p>
             )}
           </section>
 
           <section className="album-section">
             <header className="list-header">
-              <h3>Albums & Singles</h3>
-              <span>{albums.length} releases</span>
+              <h3>{tr('music.albums')}</h3>
+              <span>{tr('music.releases', { count: albums.length })}</span>
             </header>
             <div className="album-grid">
               {albums.map((album) => (
@@ -134,7 +139,7 @@ export function MusicPanel({ artist, artistName, spotifyArtistId }: MusicPanelPr
                   <img src={album.image} alt={album.name} loading="lazy" />
                   <strong>{album.name}</strong>
                   <span>
-                    {album.releaseDate} · {album.totalTracks} tracks
+                    {album.releaseDate} · {tr('music.tracks', { count: album.totalTracks })}
                   </span>
                 </button>
               ))}
@@ -163,12 +168,8 @@ export function MusicPanel({ artist, artistName, spotifyArtistId }: MusicPanelPr
         </>
       ) : (
         <div className="api-hint card">
-          <h3>Unlock full discography browsing</h3>
-          <p>
-            Add <code>SPOTIFY_CLIENT_ID</code> and <code>SPOTIFY_CLIENT_SECRET</code> to your{' '}
-            <code>.env</code> file to browse every album, single, and 30-second previews in-app.
-            The Spotify embed above still streams everything right now.
-          </p>
+          <h3>{tr('music.unlockTitle')}</h3>
+          <p>{tr('music.unlockBody')}</p>
         </div>
       )}
     </div>

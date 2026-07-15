@@ -1,4 +1,4 @@
-import { type ArtistId, getArtist } from './artists.js';
+import { type Artist, type ArtistId } from './artists.js';
 
 export interface SpotifyTrack {
   id: string;
@@ -62,7 +62,7 @@ async function spotifyGet<T>(path: string, token: string): Promise<T> {
 }
 
 export async function getSpotifyCatalog(options: {
-  artistId: ArtistId;
+  artist: Artist;
   clientId?: string;
   clientSecret?: string;
 }): Promise<{
@@ -71,14 +71,15 @@ export async function getSpotifyCatalog(options: {
   source: 'api' | 'embed';
   artistId: ArtistId;
 }> {
-  const { clientId, clientSecret, artistId } = options;
+  const { clientId, clientSecret, artist } = options;
+  const artistId = artist.id;
 
-  if (!clientId || !clientSecret) {
+  if (!clientId || !clientSecret || !artist.spotifyArtistId) {
     return { albums: [], topTracks: [], source: 'embed', artistId };
   }
 
   const token = await getAccessToken(clientId, clientSecret);
-  const artistSpotifyId = getArtist(artistId).spotifyArtistId;
+  const artistSpotifyId = artist.spotifyArtistId;
 
   const [albumsData, topTracksData] = await Promise.all([
     spotifyGet<{

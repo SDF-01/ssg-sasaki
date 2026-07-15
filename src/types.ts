@@ -1,4 +1,20 @@
-export type ArtistId = 'justin' | 'ariana';
+export type ArtistId = string;
+
+export interface CustomArtistProfile {
+  id: string;
+  name: string;
+  nameJp?: string;
+  tagline?: string;
+  fanName?: string;
+  fanNameJp?: string;
+  spotifyArtistId?: string;
+  spotifyUrl?: string;
+  youtubeVevoHandle?: string;
+  youtubeOfficialHandle?: string;
+  instagramUrl?: string;
+  tiktokUrl?: string;
+  websiteUrl?: string;
+}
 
 export interface ArtistSummary {
   id: ArtistId;
@@ -8,6 +24,7 @@ export interface ArtistSummary {
   fanName: string;
   fanNameJp: string;
   spotifyArtistId: string;
+  custom?: boolean;
 }
 
 export interface YouTubeVideo {
@@ -46,7 +63,7 @@ export interface SpotifyAlbum {
   spotifyUrl: string;
 }
 
-export type TabId = 'videos' | 'music' | 'accounts';
+export type TabId = 'videos' | 'music' | 'accounts' | 'add';
 
 export type YouTubeFeedId = 'official' | 'vevo';
 
@@ -57,4 +74,8 @@ export interface YouTubeFeed {
   channelId: string;
   url: string;
   description: string;
+}
+
+export function isCustomArtistId(id: ArtistId): boolean {
+  return id.startsWith('custom-');
 }

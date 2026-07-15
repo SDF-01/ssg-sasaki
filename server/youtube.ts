@@ -1,6 +1,6 @@
 import { XMLParser } from 'fast-xml-parser';
 
-import { type ArtistId, getArtist, type YouTubeFeedId } from './artists.js';
+import { type Artist, type ArtistId, type YouTubeFeedId } from './artists.js';
 import { fetchChannelViaBrowse } from './youtubeBrowse.js';
 
 export interface YouTubeVideo {
@@ -106,7 +106,7 @@ async function fetchViaApi(
 }
 
 export async function getYouTubeVideos(options: {
-  artistId: ArtistId;
+  artist: Artist;
   feed?: YouTubeFeedId;
   apiKey?: string;
   pageToken?: string;
@@ -119,12 +119,20 @@ export async function getYouTubeVideos(options: {
   artistId: ArtistId;
   totalHint?: string;
 }> {
-  const { apiKey, pageToken, limit = 50, artistId } = options;
-  const feed = options.feed ?? 'vevo';
-  const feedConfig = getArtist(artistId).youtubeFeeds[feed];
+  const { apiKey, pageToken, limit = 50, artist } = options;
+  const artistId = artist.id;
+  const feed =
+    options.feed ??
+    (artist.youtubeFeeds.vevo ? 'vevo' : artist.youtubeFeeds.official ? 'official' : 'vevo');
+  const feedConfig = artist.youtubeFeeds[feed];
+
+  if (!feedConfig) {
+    throw new Error(`No ${feed} YouTube channel configured for ${artist.name}`);
+  }
+
   const channelId = feedConfig.channelId;
 
-  if (apiKey) {
+  if (apiKey && channelId) {
     try {
       const result = await fetchViaApi(apiKey, channelId, pageToken);
       return {
@@ -153,6 +161,7 @@ export async function getYouTubeVideos(options: {
       totalHint: result.totalHint,
     };
   } catch (browseErr) {
+    if (!channelId) throw browseErr;
     try {
       const videos = await fetchViaRss(channelId);
       return {

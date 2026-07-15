@@ -1,4 +1,5 @@
-import type { ArtistId } from './types';
+import type { ArtistId, CustomArtistProfile } from './types';
+import { isCustomArtistId } from './types';
 
 const API_BASES = [
   import.meta.env.VITE_API_BASE as string | undefined,
@@ -16,12 +17,15 @@ function isNetworkError(err: unknown): boolean {
   );
 }
 
-async function fetchJson<T>(path: string): Promise<T> {
+async function requestJson<T>(
+  path: string,
+  init?: RequestInit,
+): Promise<T> {
   let lastError: Error | undefined;
 
   for (const base of API_BASES) {
     try {
-      const res = await fetch(`${base}${path}`);
+      const res = await fetch(`${base}${path}`, init);
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error((body as { error?: string }).error ?? `Request failed: ${res.status}`);
@@ -43,56 +47,77 @@ async function fetchJson<T>(path: string): Promise<T> {
   );
 }
 
-function artistQuery(artist: ArtistId) {
-  return `artist=${artist}`;
+interface ArtistRequest {
+  artist: ArtistId;
+  profile?: CustomArtistProfile;
+}
+
+function artistRequest(path: string, { artist, profile }: ArtistRequest, extra?: object) {
+  if (isCustomArtistId(artist) && profile) {
+    return requestJson(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ artist, profile, ...extra }),
+    });
+  }
+  const params = new URLSearchParams({ artist });
+  if (extra) {
+    for (const [key, value] of Object.entries(extra)) {
+      if (value !== undefined && value !== null) params.set(key, String(value));
+    }
+  }
+  const qs = params.toString();
+  return requestJson(`${path}${qs ? `?${qs}` : ''}`);
 }
 
 export function fetchArtists() {
-  return fetchJson<{ artists: import('./types').ArtistSummary[] }>('/artists');
+  return requestJson<{ artists: import('./types').ArtistSummary[] }>('/artists');
 }
 
-export function fetchAccounts(artist: ArtistId) {
-  return fetchJson<{
+export function fetchAccounts(artist: ArtistId, profile?: CustomArtistProfile) {
+  return artistRequest('/accounts', { artist, profile }) as Promise<{
     artist: { id: ArtistId; name: string; tagline: string; fanName: string };
     accounts: import('./types').SocialAccount[];
-  }>(`/accounts?${artistQuery(artist)}`);
+  }>;
 }
 
-export function fetchYouTubeFeeds(artist: ArtistId) {
-  return fetchJson<{ artistId: ArtistId; feeds: import('./types').YouTubeFeed[] }>(
-    `/youtube/feeds?${artistQuery(artist)}`,
-  );
+export function fetchYouTubeFeeds(artist: ArtistId, profile?: CustomArtistProfile) {
+  return artistRequest('/youtube/feeds', { artist, profile }) as Promise<{
+    artistId: ArtistId;
+    feeds: import('./types').YouTubeFeed[];
+  }>;
 }
 
 export function fetchYouTubeVideos(options: {
   artist: ArtistId;
+  profile?: CustomArtistProfile;
   feed?: import('./types').YouTubeFeedId;
   pageToken?: string;
 }) {
-  const params = new URLSearchParams({ artist: options.artist });
-  if (options.feed) params.set('feed', options.feed);
-  if (options.pageToken) params.set('pageToken', options.pageToken);
-  return fetchJson<{
+  return artistRequest('/youtube/videos', options, {
+    feed: options.feed,
+    pageToken: options.pageToken,
+  }) as Promise<{
     videos: import('./types').YouTubeVideo[];
     nextPageToken?: string;
     source: 'api' | 'rss' | 'browse';
     feed: import('./types').YouTubeFeedId;
     artistId: ArtistId;
     totalHint?: string;
-  }>(`/youtube/videos?${params.toString()}`);
+  }>;
 }
 
-export function fetchSpotifyCatalog(artist: ArtistId) {
-  return fetchJson<{
+export function fetchSpotifyCatalog(artist: ArtistId, profile?: CustomArtistProfile) {
+  return artistRequest('/spotify/catalog', { artist, profile }) as Promise<{
     albums: import('./types').SpotifyAlbum[];
     topTracks: import('./types').SpotifyTrack[];
     source: 'api' | 'embed';
     artistId: ArtistId;
-  }>(`/spotify/catalog?${artistQuery(artist)}`);
+  }>;
 }
 
 export function fetchAlbumTracks(albumId: string) {
-  return fetchJson<{ tracks: import('./types').SpotifyTrack[] }>(
+  return requestJson<{ tracks: import('./types').SpotifyTrack[] }>(
     `/spotify/albums/${albumId}/tracks`,
   );
 }

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 
 import { fetchAccounts } from '../api';
-import type { ArtistId, SocialAccount } from '../types';
+import { useLanguage } from '../LanguageProvider';
+import type { ArtistId, CustomArtistProfile, SocialAccount } from '../types';
 
 const ICON_LABELS: Record<string, string> = {
   spotify: 'Spotify',
@@ -20,9 +21,11 @@ const ICON_LABELS: Record<string, string> = {
 
 interface AccountsPanelProps {
   artist: ArtistId;
+  profile?: CustomArtistProfile;
 }
 
-export function AccountsPanel({ artist }: AccountsPanelProps) {
+export function AccountsPanel({ artist, profile }: AccountsPanelProps) {
+  const { tr } = useLanguage();
   const [accounts, setAccounts] = useState<SocialAccount[]>([]);
   const [artistName, setArtistName] = useState('');
   const [fanName, setFanName] = useState('');
@@ -34,7 +37,7 @@ export function AccountsPanel({ artist }: AccountsPanelProps) {
     setLoading(true);
     void (async () => {
       try {
-        const data = await fetchAccounts(artist);
+        const data = await fetchAccounts(artist, profile);
         setAccounts(data.accounts);
         setArtistName(data.artist.name);
         setFanName(data.artist.fanName);
@@ -46,15 +49,15 @@ export function AccountsPanel({ artist }: AccountsPanelProps) {
         setLoading(false);
       }
     })();
-  }, [artist]);
+  }, [artist, profile]);
 
-  if (loading) return <div className="panel-loading">Loading official accounts…</div>;
+  if (loading) return <div className="panel-loading">{tr('accounts.loading')}</div>;
   if (error) return <div className="panel-error">{error}</div>;
 
   return (
     <div className="accounts-layout">
       <p className="accounts-intro">
-        Every verified {artistName} profile in one place — streaming, social, and official site.
+        {tr('accounts.intro', { name: artistName })}
         {tagline ? ` ${tagline}.` : ''}
       </p>
       <div className="accounts-grid">
@@ -81,7 +84,7 @@ export function AccountsPanel({ artist }: AccountsPanelProps) {
         ))}
       </div>
       <p className="accounts-fan-note">
-        Built for <strong>{fanName}</strong>
+        {tr('accounts.builtFor')} <strong>{fanName}</strong>
       </p>
     </div>
   );

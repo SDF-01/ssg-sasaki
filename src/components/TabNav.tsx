@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 
+import { useLanguage } from '../LanguageProvider';
 import type { TabId } from '../types';
 
 interface TabNavProps {
@@ -7,15 +8,18 @@ interface TabNavProps {
   onChange: (tab: TabId) => void;
 }
 
-const TABS: { id: TabId; label: string; labelJp: string; emoji: string }[] = [
-  { id: 'videos', label: 'YouTube', labelJp: '動画', emoji: '▶' },
-  { id: 'music', label: 'Music', labelJp: '音楽', emoji: '♫' },
-  { id: 'accounts', label: 'Accounts', labelJp: '公式', emoji: '◎' },
+const TABS: { id: TabId; labelKey: 'tab.videos' | 'tab.music' | 'tab.accounts' | 'tab.add'; emoji: string }[] = [
+  { id: 'videos', labelKey: 'tab.videos', emoji: '▶' },
+  { id: 'music', labelKey: 'tab.music', emoji: '♫' },
+  { id: 'accounts', labelKey: 'tab.accounts', emoji: '♡' },
+  { id: 'add', labelKey: 'tab.add', emoji: '✧' },
 ];
 
 export function TabNav({ active, onChange }: TabNavProps) {
+  const { tr } = useLanguage();
+
   return (
-    <nav className="tab-nav" aria-label="Main sections">
+    <nav className="tab-nav" aria-label={tr('tab.navAria')}>
       {TABS.map((tab, i) => (
         <button
           key={tab.id}
@@ -27,10 +31,7 @@ export function TabNav({ active, onChange }: TabNavProps) {
           <span className="tab-emoji" aria-hidden="true">
             {tab.emoji}
           </span>
-          <span className="tab-label">
-            <span className="tab-label-en">{tab.label}</span>
-            <span className="tab-label-jp">{tab.labelJp}</span>
-          </span>
+          <span className="tab-label">{tr(tab.labelKey)}</span>
         </button>
       ))}
     </nav>

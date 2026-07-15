@@ -1,4 +1,6 @@
-export type ArtistId = 'justin' | 'ariana';
+export type ArtistId = string;
+
+export type BuiltinArtistId = 'justin' | 'ariana' | 'radwimps';
 
 export type YouTubeFeedId = 'official' | 'vevo';
 
@@ -27,11 +29,30 @@ export interface Artist {
   fanName: string;
   fanNameJp: string;
   spotifyArtistId: string;
-  youtubeFeeds: Record<YouTubeFeedId, YouTubeFeed>;
+  youtubeFeeds: Partial<Record<YouTubeFeedId, YouTubeFeed>>;
   socialAccounts: SocialAccount[];
+  custom?: boolean;
 }
 
-export const ARTISTS: Record<ArtistId, Artist> = {
+export interface CustomArtistInput {
+  id?: string;
+  name: string;
+  nameJp?: string;
+  tagline?: string;
+  fanName?: string;
+  fanNameJp?: string;
+  spotifyArtistId?: string;
+  spotifyUrl?: string;
+  youtubeVevoHandle?: string;
+  youtubeOfficialHandle?: string;
+  instagramUrl?: string;
+  tiktokUrl?: string;
+  websiteUrl?: string;
+}
+
+export const BUILTIN_ARTIST_IDS = ['justin', 'ariana', 'radwimps'] as const;
+
+export const ARTISTS: Record<BuiltinArtistId, Artist> = {
   justin: {
     id: 'justin',
     name: 'Justin Bieber',
@@ -272,12 +293,95 @@ export const ARTISTS: Record<ArtistId, Artist> = {
       },
     ],
   },
+  radwimps: {
+    id: 'radwimps',
+    name: 'RADWIMPS',
+    nameJp: 'ラッドウィンプス',
+    tagline: '君の名は。 · すずめ · FOREVER DAZE',
+    fanName: 'WIMPS',
+    fanNameJp: 'ウィンプス',
+    spotifyArtistId: '1EowJ1WwkMzkCkRomFhui7',
+    youtubeFeeds: {
+      vevo: {
+        id: 'vevo',
+        label: 'RADWIMPS_official',
+        handle: '@RADWIMPS_official',
+        channelId: 'UCIVqvhyo8ttjYOmMJuhq_YQ',
+        url: 'https://www.youtube.com/@RADWIMPS_official',
+        description: 'Official music videos — full catalog',
+      },
+    },
+    socialAccounts: [
+      {
+        platform: 'Spotify',
+        handle: 'RADWIMPS',
+        url: 'https://open.spotify.com/artist/1EowJ1WwkMzkCkRomFhui7',
+        description: 'Albums, singles, and playlists',
+        icon: 'spotify',
+      },
+      {
+        platform: 'YouTube',
+        handle: '@RADWIMPS_official',
+        url: 'https://www.youtube.com/@RADWIMPS_official',
+        description: 'Official music video catalog',
+        icon: 'youtube',
+      },
+      {
+        platform: 'Apple Music',
+        handle: 'RADWIMPS',
+        url: 'https://music.apple.com/jp/artist/radwimps/91160335',
+        description: 'Stream on Apple Music',
+        icon: 'apple',
+      },
+      {
+        platform: 'Instagram',
+        handle: '@radwimps_jp',
+        url: 'https://www.instagram.com/radwimps_jp/',
+        description: 'Photos and reels',
+        icon: 'instagram',
+      },
+      {
+        platform: 'TikTok',
+        handle: '@radwimps_official',
+        url: 'https://www.tiktok.com/@radwimps_official',
+        description: 'Short clips and behind the scenes',
+        icon: 'tiktok',
+      },
+      {
+        platform: 'X (Twitter)',
+        handle: '@RADWIMPS',
+        url: 'https://x.com/RADWIMPS',
+        description: 'Updates and announcements',
+        icon: 'x',
+      },
+      {
+        platform: 'Facebook',
+        handle: 'RADWIMPS',
+        url: 'https://www.facebook.com/radwimps.official/',
+        description: 'Official Facebook page',
+        icon: 'facebook',
+      },
+      {
+        platform: 'Official Site',
+        handle: 'radwimps.jp',
+        url: 'https://radwimps.jp/',
+        description: 'Tour dates, news, and merch',
+        icon: 'web',
+      },
+    ],
+  },
 };
 
-export function parseArtistId(value: unknown): ArtistId {
-  return value === 'ariana' ? 'ariana' : 'justin';
+export function isBuiltinArtistId(id: string): id is BuiltinArtistId {
+  return id === 'justin' || id === 'ariana' || id === 'radwimps';
 }
 
-export function getArtist(id: ArtistId): Artist {
+export function getBuiltinArtist(id: BuiltinArtistId): Artist {
   return ARTISTS[id];
+}
+
+export function parseArtistId(value: unknown): BuiltinArtistId {
+  if (value === 'ariana') return 'ariana';
+  if (value === 'radwimps') return 'radwimps';
+  return 'justin';
 }
