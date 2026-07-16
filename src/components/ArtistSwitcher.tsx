@@ -25,6 +25,11 @@ export function ArtistSwitcher({ artists, active, onChange }: ArtistSwitcherProp
             aria-pressed={active === artist.id}
             onClick={() => onChange(artist.id)}
           >
+            {active === artist.id ? (
+              <span className="artist-btn-sparkle" aria-hidden="true">
+                ✨
+              </span>
+            ) : null}
             <span className="artist-btn-name">{primaryName}</span>
             {secondaryName && secondaryName !== primaryName ? (
               <span className="artist-btn-jp">{secondaryName}</span>

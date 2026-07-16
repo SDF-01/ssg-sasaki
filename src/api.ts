@@ -74,6 +74,23 @@ export function fetchArtists() {
   return requestJson<{ artists: import('./types').ArtistSummary[] }>('/artists');
 }
 
+export interface ArtistLookupResult {
+  name: string;
+  nameJp?: string;
+  youtubeVevoHandle?: string;
+  youtubeOfficialHandle?: string;
+  spotifyArtistId?: string;
+  spotifyUrl?: string;
+  fanName?: string;
+  confidence: 'high' | 'medium' | 'low';
+  sources: string[];
+}
+
+export function fetchArtistLookup(query: string) {
+  const params = new URLSearchParams({ query });
+  return requestJson<ArtistLookupResult>(`/artists/lookup?${params}`);
+}
+
 export function fetchAccounts(artist: ArtistId, profile?: CustomArtistProfile) {
   return artistRequest('/accounts', { artist, profile }) as Promise<{
     artist: { id: ArtistId; name: string; tagline: string; fanName: string };

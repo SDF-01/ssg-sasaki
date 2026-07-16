@@ -3,11 +3,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { DEFAULT_ARTIST, getArtistTheme, getThemeClass } from './artists';
 import { fetchArtists } from './api';
 import { customArtistToSummary, loadCustomArtists } from './customArtists';
-import { APP_TITLE, HIBIKI_NAME, HIBIKI_NAME_JP } from './i18n';
+import { HIBIKI_NAME, HIBIKI_NAME_JP } from './i18n';
 import { useLanguage } from './LanguageProvider';
 import { AccountsPanel } from './components/AccountsPanel';
 import { AddArtistPanel } from './components/AddArtistPanel';
 import { ArtistSwitcher } from './components/ArtistSwitcher';
+import { CuteOverlays, HibikiChibiFace } from './components/CuteOverlays';
 import { LanguageToggle } from './components/LanguageToggle';
 import { MusicPanel } from './components/MusicPanel';
 import { TabNav } from './components/TabNav';
@@ -45,6 +46,7 @@ function App() {
 
   return (
     <div className={`app hibiki-app ${themeClass} lang-${locale}`}>
+      <CuteOverlays />
       <div className="cute-floats" aria-hidden="true">
         <span className="cute-float cute-float--1">♡</span>
         <span className="cute-float cute-float--2">✨</span>
@@ -71,13 +73,35 @@ function App() {
         <div className="hero-glow" aria-hidden="true" />
         <div className="hero-tape hero-tape--left" aria-hidden="true" />
         <div className="hero-tape hero-tape--right" aria-hidden="true" />
+        <span className="onomatopoeia onomatopoeia--1" aria-hidden="true">
+          {locale === 'ja' ? 'キラキラ' : 'sparkle'}
+        </span>
+        <span className="onomatopoeia onomatopoeia--2" aria-hidden="true">
+          {locale === 'ja' ? 'ふわふわ' : 'fluffy'}
+        </span>
         <div className="hero-content">
           <LanguageToggle />
 
           <div className="hibiki-star" aria-label={hibikiName}>
+            <span className="hibiki-speech" aria-hidden="true">
+              {tr('hero.hibikiCheer')}
+            </span>
+            <span className="hibiki-star__bow" aria-hidden="true">
+              🎀
+            </span>
             <span className="hibiki-star__halo" aria-hidden="true" />
-            <span className="hibiki-star__ring">♡</span>
-            <span className="hibiki-star__initial">H</span>
+            <span className="hibiki-star__sparkle hibiki-star__sparkle--1" aria-hidden="true">
+              ✦
+            </span>
+            <span className="hibiki-star__sparkle hibiki-star__sparkle--2" aria-hidden="true">
+              ✧
+            </span>
+            <span className="hibiki-star__sparkle hibiki-star__sparkle--3" aria-hidden="true">
+              ♡
+            </span>
+            <span className="hibiki-star__face">
+              <HibikiChibiFace />
+            </span>
             <span className="hibiki-star__name">{hibikiName}</span>
             <span className="hibiki-star__tag">{tr('hero.hibikiTag')}</span>
           </div>
@@ -87,16 +111,19 @@ function App() {
           </p>
 
           <h1 className="app-title">
+            <span className="title-plate" aria-hidden="true" />
             <span className="title-sparkle title-sparkle--left" aria-hidden="true">
               ✨
             </span>
-            <span className="title-main">{APP_TITLE}</span>
+            <span className="title-main">{tr('app.title')}</span>
             <span className="title-sparkle title-sparkle--right" aria-hidden="true">
               ✨
             </span>
           </h1>
           <div className="title-ribbon" aria-hidden="true">
-            <span>♡ J-POP ♡</span>
+            <span className="title-ribbon__heart">♡</span>
+            <span>J-POP</span>
+            <span className="title-ribbon__heart">♡</span>
           </div>
 
           {current && tab !== 'add' && (
@@ -129,10 +156,21 @@ function App() {
         </div>
       </header>
 
-      <TabNav active={tab} onChange={setTab} />
+      <div className="tab-nav-shell">
+        <span className="tab-nav-deco tab-nav-deco--l" aria-hidden="true">
+          ♡
+        </span>
+        <TabNav active={tab} onChange={setTab} />
+        <span className="tab-nav-deco tab-nav-deco--r" aria-hidden="true">
+          ♡
+        </span>
+      </div>
 
-      <main className="main-panel">
+      <main className="main-panel" data-tab={tab}>
+        <div className="panel-binder" aria-hidden="true" />
         <div className="panel-tape" aria-hidden="true" />
+        <span className="panel-charm" aria-hidden="true" />
+        <div className="panel-inner panel-enter" key={tab}>
         {tab === 'videos' && <VideosPanel artist={activeArtist} profile={activeProfile} />}
         {tab === 'music' && current && (
           <MusicPanel
@@ -154,12 +192,13 @@ function App() {
             onDone={() => setTab('videos')}
           />
         )}
+        </div>
       </main>
 
       <footer className="footer">
         <p>
           <span className="footer-jp">{tr('footer.jp')}</span>
-          {tr('footer.forHibiki')} · {APP_TITLE}
+          {tr('footer.forHibiki')} · {tr('app.title')}
         </p>
       </footer>
     </div>

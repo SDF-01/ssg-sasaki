@@ -61,6 +61,49 @@ async function spotifyGet<T>(path: string, token: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+export interface SpotifyArtistRef {
+  id: string;
+  name: string;
+  url: string;
+}
+
+export async function getSpotifyArtistById(
+  artistId: string,
+  clientId: string,
+  clientSecret: string,
+): Promise<SpotifyArtistRef | null> {
+  try {
+    const token = await getAccessToken(clientId, clientSecret);
+    const data = await spotifyGet<{
+      id: string;
+      name: string;
+      external_urls: { spotify: string };
+    }>(`/artists/${artistId}`, token);
+    return { id: data.id, name: data.name, url: data.external_urls.spotify };
+  } catch {
+    return null;
+  }
+}
+
+export async function searchSpotifyArtist(
+  query: string,
+  clientId: string,
+  clientSecret: string,
+): Promise<SpotifyArtistRef | null> {
+  try {
+    const token = await getAccessToken(clientId, clientSecret);
+    const encoded = encodeURIComponent(query);
+    const data = await spotifyGet<{
+      artists: { items: Array<{ id: string; name: string; external_urls: { spotify: string } }> };
+    }>(`/search?q=${encoded}&type=artist&limit=3`, token);
+    const top = data.artists.items[0];
+    if (!top) return null;
+    return { id: top.id, name: top.name, url: top.external_urls.spotify };
+  } catch {
+    return null;
+  }
+}
+
 export async function getSpotifyCatalog(options: {
   artist: Artist;
   clientId?: string;

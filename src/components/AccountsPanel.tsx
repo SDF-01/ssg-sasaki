@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { fetchAccounts } from '../api';
 import { useLanguage } from '../LanguageProvider';
+import { PageBanner, PageFrame, PageMetaChip, PageSpread } from './PageChrome';
 import type { ArtistId, CustomArtistProfile, SocialAccount } from '../types';
 
 const ICON_LABELS: Record<string, string> = {
@@ -55,37 +56,66 @@ export function AccountsPanel({ artist, profile }: AccountsPanelProps) {
   if (error) return <div className="panel-error">{error}</div>;
 
   return (
-    <div className="accounts-layout">
-      <p className="accounts-intro">
-        {tr('accounts.intro', { name: artistName })}
-        {tagline ? ` ${tagline}.` : ''}
-      </p>
-      <div className="accounts-grid">
-        {accounts.map((account) => (
-          <a
-            key={`${artist}-${account.platform}`}
-            href={account.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="account-card"
-          >
-            <div className={`account-icon icon-${account.icon}`} aria-hidden="true">
-              {(ICON_LABELS[account.icon] ?? account.platform).charAt(0)}
-            </div>
-            <div>
-              <strong>{account.platform}</strong>
-              <span className="handle">{account.handle}</span>
-              <p>{account.description}</p>
-            </div>
-            <span className="external" aria-hidden="true">
-              ↗
-            </span>
-          </a>
-        ))}
+    <PageSpread variant="accounts">
+      <PageBanner
+        sticker="♡"
+        title={tr('page.accounts.title')}
+        subtitle={tr('page.accounts.subtitle')}
+        meta={<PageMetaChip>{tr('page.accounts.linkCount', { count: accounts.length })}</PageMetaChip>}
+      />
+
+      <div className="profile-spotlight">
+        <span className="profile-spotlight__tape" aria-hidden="true" />
+        <div className="profile-spotlight__avatar" aria-hidden="true">
+          {artistName.charAt(0)}
+        </div>
+        <div className="profile-spotlight__copy">
+          <h3>{artistName}</h3>
+          {tagline ? <p className="profile-spotlight__tagline">{tagline}</p> : null}
+          <p className="profile-spotlight__intro">
+            {tr('accounts.intro', { name: artistName })}
+          </p>
+        </div>
+        <div className="profile-spotlight__badge">
+          <span className="profile-spotlight__badge-label">{tr('page.accounts.fanClub')}</span>
+          <strong>{fanName}</strong>
+        </div>
       </div>
-      <p className="accounts-fan-note">
-        {tr('accounts.builtFor')} <strong>{fanName}</strong>
-      </p>
-    </div>
+
+      <PageFrame
+        label={tr('page.accounts.links')}
+        labelIcon="🔗"
+        variant="sticker"
+        className="page-frame--links"
+      >
+        <div className="accounts-grid">
+          {accounts.map((account) => (
+            <a
+              key={`${artist}-${account.platform}`}
+              href={account.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`account-card account-card--${account.icon}`}
+            >
+              <div className={`account-icon icon-${account.icon}`} aria-hidden="true">
+                {(ICON_LABELS[account.icon] ?? account.platform).charAt(0)}
+              </div>
+              <div>
+                <strong>{account.platform}</strong>
+                <span className="handle">{account.handle}</span>
+                <p>{account.description}</p>
+              </div>
+              <span className="external" aria-hidden="true">
+                ↗
+              </span>
+            </a>
+          ))}
+        </div>
+
+        <p className="accounts-fan-note">
+          {tr('accounts.builtFor')} <strong>{fanName}</strong>
+        </p>
+      </PageFrame>
+    </PageSpread>
   );
 }

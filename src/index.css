@@ -1,9 +1,9 @@
 :root {
   --ink: #9a5a8a;
   --ink-soft: rgba(154, 90, 138, 0.12);
-  --bg: #fff5fb;
+  --bg: #fff8fd;
   --bg-elevated: #ffffff;
-  --bg-card: #fff0f9;
+  --bg-card: #fff5fc;
   --border: rgba(255, 120, 190, 0.48);
   --border-bold: 2.5px solid var(--ink);
   --text: #6b4468;
@@ -68,11 +68,32 @@ body::before {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  opacity: 0.5;
+  opacity: 0.62;
   background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cpath fill='%23ff6eb4' fill-opacity='0.12' d='M32 52 C32 52 8 34 8 20 C8 12 14 8 22 8 C26 8 30 10 32 16 C34 10 38 8 42 8 C50 8 56 12 56 20 C56 34 32 52 32 52Z'/%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Ctext x='8' y='28' font-size='18' fill='%23e8a0ff' fill-opacity='0.18'%3E✦%3C/text%3E%3C/svg%3E");
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cpath fill='%23ff6eb4' fill-opacity='0.14' d='M32 52 C32 52 8 34 8 20 C8 12 14 8 22 8 C26 8 30 10 32 16 C34 10 38 8 42 8 C50 8 56 12 56 20 C56 34 32 52 32 52Z'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Ctext x='8' y='28' font-size='18' fill='%23e8a0ff' fill-opacity='0.22'%3E✦%3C/text%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ctext x='6' y='24' font-size='14' fill='%238ef0ff' fill-opacity='0.16'%3E♡%3C/text%3E%3C/svg%3E");
   z-index: 0;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  background: radial-gradient(circle at 50% 0%, rgba(255, 200, 230, 0.35), transparent 42%);
+  z-index: 0;
+  animation: sky-glow 8s ease-in-out infinite alternate;
+}
+
+@keyframes sky-glow {
+  from {
+    opacity: 0.25;
+  }
+  to {
+    opacity: 0.45;
+  }
 }
 
 .lang-ja {
@@ -168,7 +189,11 @@ code {
 }
 
 .theme-ariana .title-main {
-  background: linear-gradient(180deg, #fff 10%, var(--pink) 50%, var(--cyan) 100%);
+  background: linear-gradient(90deg, #a868c8 0%, #e8b4ff 30%, #f0c8ff 50%, #d8a8f0 70%, #a868c8 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .theme-ariana .sticker--pink {
@@ -214,7 +239,11 @@ code {
 }
 
 .theme-radwimps .title-main {
-  background: linear-gradient(180deg, #fff 10%, var(--pink) 50%, var(--cyan) 100%);
+  background: linear-gradient(90deg, #6898d8 0%, #9ec8ff 30%, #b8e8ff 50%, #88c0f0 70%, #6898d8 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .theme-custom {

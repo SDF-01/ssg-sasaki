@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { fetchYouTubeFeeds, fetchYouTubeVideos } from '../api';
 import { useLanguage } from '../LanguageProvider';
+import { PageBanner, PageFrame, PageMetaChip, PageSpread } from './PageChrome';
 import type { ArtistId, CustomArtistProfile, YouTubeFeed, YouTubeFeedId, YouTubeVideo } from '../types';
 
 const SEARCH_DEBOUNCE_MS = 350;
@@ -161,6 +162,13 @@ export function VideosPanel({ artist, profile }: VideosPanelProps) {
 
   const currentFeed = feeds.find((f) => f.id === activeFeed);
   const dateLocale = locale === 'ja' ? 'ja-JP' : undefined;
+  const catalogLabel =
+    activeFeed === 'vevo' ? tr('videos.catalogVevo') : tr('videos.catalogAll');
+  const catalogMeta = searchingCatalog
+    ? tr('videos.searching', { count: videos.length })
+    : normalizedQuery
+      ? tr('videos.filtered', { filtered: filteredVideos.length, total: videos.length })
+      : tr('videos.loaded', { count: videos.length });
 
   if (loading) return <div className="panel-loading">{tr('videos.loading')}</div>;
   if (error) {
@@ -175,157 +183,182 @@ export function VideosPanel({ artist, profile }: VideosPanelProps) {
   }
 
   return (
-    <div className="videos-layout">
-      <div className="player-column">
-        {feeds.length > 1 && (
-          <div className="feed-switcher" role="tablist" aria-label={tr('videos.feedAria')}>
-            {feeds.map((feed) => (
-              <button
-                key={feed.id}
-                type="button"
-                role="tab"
-                aria-selected={activeFeed === feed.id}
-                className={`feed-btn ${activeFeed === feed.id ? 'active' : ''}`}
-                onClick={() => setActiveFeed(feed.id)}
-              >
-                {feed.label}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {currentFeed && (
-          <p className="feed-description">
-            {currentFeed.description}
-            {' · '}
-            <a href={currentFeed.url} target="_blank" rel="noopener noreferrer">
-              {tr('videos.openYoutube')}
-            </a>
-          </p>
-        )}
-
-        {selected ? (
+    <PageSpread variant="videos">
+      <PageBanner
+        sticker="▶"
+        title={tr('page.videos.title')}
+        subtitle={tr('page.videos.subtitle')}
+        meta={
           <>
-            <div className="video-embed">
-              <iframe
-                title={selected.title}
-                src={`https://www.youtube.com/embed/${selected.id}?autoplay=0&rel=0`}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
-            <div className="now-playing">
-              <h2>{selected.title}</h2>
-              {selected.publishedAt ? (
-                <p className="meta">
-                  {tr('videos.published', {
-                    date: new Date(selected.publishedAt).toLocaleDateString(dateLocale),
-                  })}
-                </p>
-              ) : null}
-            </div>
+            <PageMetaChip>{sourceLabels[source]}</PageMetaChip>
+            {currentFeed ? <PageMetaChip>{currentFeed.label}</PageMetaChip> : null}
           </>
-        ) : (
-          <p className="muted">{tr('videos.selectVideo')}</p>
-        )}
-        <p className="source-badge">
-          {tr('videos.source')} {sourceLabels[source]}
-          {hint ? ` · ${hint}` : ''}
-        </p>
-      </div>
+        }
+      />
 
-      <aside className="video-list">
-        <header className="list-header">
-          <h3>{activeFeed === 'vevo' ? tr('videos.catalogVevo') : tr('videos.catalogAll')}</h3>
-          <span>
-            {searchingCatalog
-              ? tr('videos.searching', { count: videos.length })
-              : normalizedQuery
-                ? tr('videos.filtered', { filtered: filteredVideos.length, total: videos.length })
-                : tr('videos.loaded', { count: videos.length })}
-          </span>
-        </header>
+      <div className="page-columns page-columns--theater">
+        <PageFrame
+          label={tr('page.videos.nowShowing')}
+          labelIcon="🎬"
+          variant="polaroid"
+          className="page-frame--theater"
+        >
+          {feeds.length > 1 && (
+            <div className="feed-switcher feed-switcher--pill" role="tablist" aria-label={tr('videos.feedAria')}>
+              {feeds.map((feed) => (
+                <button
+                  key={feed.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeFeed === feed.id}
+                  className={`feed-btn ${activeFeed === feed.id ? 'active' : ''}`}
+                  onClick={() => setActiveFeed(feed.id)}
+                >
+                  {feed.label}
+                </button>
+              ))}
+            </div>
+          )}
 
-        <div className="video-search">
-          <label className="video-search-label" htmlFor="video-catalog-search">
-            {tr('videos.searchLabel')}
-          </label>
-          <div className="video-search-row">
-            <input
-              id="video-catalog-search"
-              type="search"
-              className="video-search-input"
-              placeholder={tr('videos.searchPlaceholder')}
-              value={searchQuery}
-              onChange={(e) => {
-                searchPagesLoaded.current = 0;
-                setSearchQuery(e.target.value);
-              }}
-              autoComplete="off"
-              spellCheck={false}
-            />
-            {searchQuery ? (
-              <button
-                type="button"
-                className="video-search-clear"
-                aria-label={tr('videos.clearSearch')}
-                onClick={() => {
-                  searchPagesLoaded.current = 0;
-                  setSearchQuery('');
-                }}
-              >
-                ✕
-              </button>
-            ) : null}
-          </div>
-        </div>
+          {currentFeed && (
+            <p className="feed-description">
+              {currentFeed.description}
+              {' · '}
+              <a href={currentFeed.url} target="_blank" rel="noopener noreferrer">
+                {tr('videos.openYoutube')}
+              </a>
+            </p>
+          )}
 
-        <ul>
-          {filteredVideos.length === 0 ? (
-            <li className="video-search-empty">
-              {searchingCatalog ? (
-                <>{tr('videos.searchingDeeper', { count: videos.length })}</>
-              ) : (
-                <>
-                  {tr('videos.noMatch', {
-                    query: searchQuery,
-                    loaded:
-                      videos.length > 0 ? tr('videos.inLoaded', { count: videos.length }) : '',
-                  })}
-                </>
-              )}
-            </li>
+          {selected ? (
+            <div className="polaroid-player">
+              <span className="polaroid-player__tape" aria-hidden="true" />
+              <div className="video-embed">
+                <iframe
+                  title={selected.title}
+                  src={`https://www.youtube.com/embed/${selected.id}?autoplay=0&rel=0`}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+              <p className="polaroid-player__caption">{selected.title}</p>
+            </div>
           ) : (
-            filteredVideos.map((video) => (
-              <li key={video.id}>
+            <div className="polaroid-player polaroid-player--empty">
+              <span className="polaroid-player__tape" aria-hidden="true" />
+              <div className="polaroid-player__placeholder">
+                <span aria-hidden="true">▶</span>
+                <p className="muted">{tr('videos.selectVideo')}</p>
+              </div>
+            </div>
+          )}
+
+          {selected?.publishedAt ? (
+            <p className="theater-meta">
+              {tr('videos.published', {
+                date: new Date(selected.publishedAt).toLocaleDateString(dateLocale),
+              })}
+            </p>
+          ) : null}
+
+          {hint ? <p className="source-badge">{hint}</p> : null}
+        </PageFrame>
+
+        <PageFrame
+          label={catalogLabel}
+          labelIcon="📼"
+          variant="default"
+          aside
+          className="page-frame--catalog"
+        >
+          <div className="catalog-toolbar">
+            <span className="catalog-count">{catalogMeta}</span>
+          </div>
+
+          <div className="video-search video-search--inline">
+            <label className="video-search-label" htmlFor="video-catalog-search">
+              {tr('videos.searchLabel')}
+            </label>
+            <div className="video-search-row">
+              <input
+                id="video-catalog-search"
+                type="search"
+                className="video-search-input"
+                placeholder={tr('videos.searchPlaceholder')}
+                value={searchQuery}
+                onChange={(e) => {
+                  searchPagesLoaded.current = 0;
+                  setSearchQuery(e.target.value);
+                }}
+                autoComplete="off"
+                spellCheck={false}
+              />
+              {searchQuery ? (
                 <button
                   type="button"
-                  className={`video-item ${selected?.id === video.id ? 'selected' : ''}`}
-                  onClick={() => setSelected(video)}
+                  className="video-search-clear"
+                  aria-label={tr('videos.clearSearch')}
+                  onClick={() => {
+                    searchPagesLoaded.current = 0;
+                    setSearchQuery('');
+                  }}
                 >
-                  <img src={video.thumbnail} alt="" loading="lazy" />
-                  <div>
-                    <strong>{video.title}</strong>
-                    {video.publishedAt ? (
-                      <span>{new Date(video.publishedAt).toLocaleDateString(dateLocale)}</span>
-                    ) : null}
-                  </div>
+                  ✕
                 </button>
+              ) : null}
+            </div>
+          </div>
+
+          <ul className="catalog-scroll">
+            {filteredVideos.length === 0 ? (
+              <li className="video-search-empty">
+                {searchingCatalog ? (
+                  <>{tr('videos.searchingDeeper', { count: videos.length })}</>
+                ) : (
+                  <>
+                    {tr('videos.noMatch', {
+                      query: searchQuery,
+                      loaded:
+                        videos.length > 0 ? tr('videos.inLoaded', { count: videos.length }) : '',
+                    })}
+                  </>
+                )}
               </li>
-            ))
-          )}
-        </ul>
-        {nextPageToken && !normalizedQuery && (
-          <button
-            type="button"
-            className="load-more"
-            disabled={loadingMore}
-            onClick={() => void load(nextPageToken, true)}
-          >
-            {loadingMore ? tr('videos.loadingMore') : tr('videos.loadMore')}
-          </button>
-        )}
-      </aside>
-    </div>
+            ) : (
+              filteredVideos.map((video) => (
+                <li key={video.id}>
+                  <button
+                    type="button"
+                    className={`video-item ${selected?.id === video.id ? 'selected' : ''}`}
+                    onClick={() => setSelected(video)}
+                  >
+                    <span className="polaroid-thumb">
+                      <img src={video.thumbnail} alt="" loading="lazy" />
+                    </span>
+                    <div>
+                      <strong>{video.title}</strong>
+                      {video.publishedAt ? (
+                        <span>{new Date(video.publishedAt).toLocaleDateString(dateLocale)}</span>
+                      ) : null}
+                    </div>
+                  </button>
+                </li>
+              ))
+            )}
+          </ul>
+
+          {nextPageToken && !normalizedQuery ? (
+            <button
+              type="button"
+              className="load-more load-more--block"
+              disabled={loadingMore}
+              onClick={() => void load(nextPageToken, true)}
+            >
+              {loadingMore ? tr('videos.loadingMore') : tr('videos.loadMore')}
+            </button>
+          ) : null}
+        </PageFrame>
+      </div>
+    </PageSpread>
   );
 }

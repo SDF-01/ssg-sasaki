@@ -12,6 +12,7 @@ import {
   getBuiltinArtist,
   isBuiltinArtistId,
 } from './artists.js';
+import { lookupArtist } from './artistLookup.js';
 import { buildCustomArtist } from './customArtist.js';
 import { getAlbumTracks, getSpotifyCatalog } from './spotify.js';
 import { getYouTubeVideos } from './youtube.js';
@@ -51,6 +52,25 @@ app.get('/api/artists', (_req, res) => {
   res.json({
     artists: Object.values(ARTISTS).map((artist) => artistPayload(artist)),
   });
+});
+
+app.get('/api/artists/lookup', async (req, res) => {
+  const query = typeof req.query.query === 'string' ? req.query.query.trim() : '';
+  if (!query) {
+    res.status(400).json({ error: 'query is required' });
+    return;
+  }
+
+  try {
+    const result = await lookupArtist(query, {
+      clientId: process.env.SPOTIFY_CLIENT_ID,
+      clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
+    });
+    res.json(result);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    res.status(500).json({ error: message });
+  }
 });
 
 app.get('/api/accounts', (req, res) => {

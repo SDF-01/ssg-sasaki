@@ -9,10 +9,10 @@ interface TabNavProps {
 }
 
 const TABS: { id: TabId; labelKey: 'tab.videos' | 'tab.music' | 'tab.accounts' | 'tab.add'; emoji: string }[] = [
-  { id: 'videos', labelKey: 'tab.videos', emoji: '▶' },
-  { id: 'music', labelKey: 'tab.music', emoji: '♫' },
-  { id: 'accounts', labelKey: 'tab.accounts', emoji: '♡' },
-  { id: 'add', labelKey: 'tab.add', emoji: '✧' },
+  { id: 'videos', labelKey: 'tab.videos', emoji: '🎬' },
+  { id: 'music', labelKey: 'tab.music', emoji: '💿' },
+  { id: 'accounts', labelKey: 'tab.accounts', emoji: '💌' },
+  { id: 'add', labelKey: 'tab.add', emoji: '✨' },
 ];
 
 export function TabNav({ active, onChange }: TabNavProps) {
@@ -32,6 +32,11 @@ export function TabNav({ active, onChange }: TabNavProps) {
             {tab.emoji}
           </span>
           <span className="tab-label">{tr(tab.labelKey)}</span>
+          {active === tab.id ? (
+            <span className="tab-heart" aria-hidden="true">
+              ♡
+            </span>
+          ) : null}
         </button>
       ))}
     </nav>
